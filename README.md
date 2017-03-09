@@ -1,18 +1,31 @@
 ## simple-kernel-nashorn
 
-This builds of of https://github.com/dpressel/simple-kernel-java, which is a port https://github.com/dsblank/simple_kernel/ using java, jeromq and jackson.  
-In this version, I extend the simple kernel to do something useful -- execute Nashorn JavaScript, as simply as possible.  The changes between this and the simple-kernel-java version are minimal!  If you understand the simple kernel, you will probably understand what's happening here too.
+This builds a JavaScript kernel on top of https://github.com/dpressel/simple-kernel-java (which is a port https://github.com/dsblank/simple_kernel/) using java, jeromq and jackson.  
+In this version, I extend the simple kernel to do something useful, but still as simply as possible.  
+
+The changes between this and the simple-kernel-java version are minimal!  If you understand the simple kernel, you will probably understand what's happening here too.
 
 Currently the following features are supported
 
   - Execution of any valid Nashorn JavaScript statements
   - Serialization of backtrace errors, execution results, and stdout capture back to jupyter lab (or notebook)
+    - Serializing stdout to the iopub channel is done by changing System.out to temporarily point at ExecutionPrintStream, and then back again after execution
   - Pygments JS highlighting
   
 A couple of things are yet to be implemented:
 
   - History
   - Command completion
+
+Getting access to the System.out stream in nashorn requires either using its full name, or importing it:
+
+```
+System = Java.type('java.lang.System')
+System.out.println('Hello')
+```
+
+I will probably add a boot script that loads some JS code upfront so you dont have to (like this stuff above).
+
 
 ### Building it
 
