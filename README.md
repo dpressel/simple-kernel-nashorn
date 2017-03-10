@@ -11,20 +11,14 @@ Currently the following features are supported
   - Serialization of backtrace errors, execution results, and stdout capture back to jupyter lab (or notebook)
     - Serializing stdout to the iopub channel is done by changing System.out to temporarily point at ExecutionPrintStream, and then back again after execution
   - Pygments JS highlighting
-  
+  - JavaScript pre-loading of extension libraries
+
 A couple of things are yet to be implemented:
 
   - History
   - Command completion
 
-Getting access to the System.out stream in nashorn requires either using its full name, or importing it:
-
-```
-System = Java.type('java.lang.System')
-System.out.println('Hello')
-```
-
-I will probably add a boot script that loads some JS code upfront so you dont have to (like this stuff above).
+*Note*: Do not use the Nashorn builtin _print_ function.  Use _console.log_ instead!
 
 
 ### Building it
@@ -73,3 +67,7 @@ dpressel@dpressel:~/dev/work$ jupyter lab
 ```
 
 You should see simple-kernel-nashorn in the list of kernels
+
+### Extending it
+
+The JavaScript can be extended easily.  Have a look at extensions.list to see how to add a js library to the Kernel as a pre-defined import.

@@ -4,11 +4,19 @@ import org.zeromq.ZMQ;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 import java.util.TimeZone;
 
 public class Utils
@@ -77,5 +85,58 @@ public class Utils
         socket.bind(hostProto);
         LOG.debug("BOUND " + hostProto);
         return socket;
+    }
+
+    public static URL getURL(Object resource, Class<?> loadFromClass) throws IOException
+    {
+        if (resource instanceof URL)
+        {
+            return (URL) resource;
+        }
+
+        if (resource instanceof URI)
+        {
+            return ((URI) resource).toURL();
+        }
+
+        if (resource instanceof File)
+        {
+            return new URL(String.format("file:%s", ((File) resource).getAbsolutePath()));
+        }
+
+        if (resource instanceof CharSequence)
+        {
+            String value = Objects.toString(resource);
+            final File file = new File(value.toString());
+            if (file.exists())
+            {
+                return new URL(String.format("file:%s", file.getAbsolutePath()));
+            }
+
+            final URL url =
+                    loadFromClass != null ? loadFromClass.getResource(value) : ClassLoader.getSystemResource(value);
+            if (url != null)
+            {
+                return url;
+            }
+            return new URL(value);
+        }
+
+        throw new IOException("Unable to get resource as URL");
+    }
+
+    public static InputStream openResource(Object resource, Class<?> loadFromClass) throws IOException
+    {
+        if (resource instanceof InputStream)
+        {
+            return (InputStream) resource;
+        }
+        final URL url = getURL(resource, loadFromClass);
+        if (url != null)
+        {
+            return url.openStream();
+        }
+
+        throw new IOException("Unable to open resource");
     }
 }

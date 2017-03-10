@@ -8,6 +8,7 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Poller;
 
 import java.io.*;
+import org.apache.commons.io.IOUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.script.*;
@@ -83,9 +84,48 @@ public class SimpleKernel
         }
     }
 
-    void start() throws Exception
+    protected void loadScriptExtensions(String extensionList) throws IOException
     {
+        LOG.info(String.format("Loading plugins from [%s]", extensionList));
+        InputStream is = null;
+        try
+        {
+            is = Utils.openResource(extensionList, SimpleKernel.class);
+            List<String> lines = IOUtils.readLines(is);
+            for (String line : lines)
+            {
+                String extensionName = line.trim();
 
+
+                try
+                {
+                    scriptEngine.eval(new InputStreamReader(Utils.openResource(extensionName, SimpleKernel.class)));
+                    LOG.info("Loaded extension " + extensionName);
+                }
+                catch (Exception ex)
+                {
+                    LOG.error("Failed to load extension: " + extensionName + ". Attempting to continue", ex);
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            LOG.error("Extension list failed to load", e);
+        }
+        finally
+        {
+            if (is != null)
+            {
+                IOUtils.closeQuietly(is);
+            }
+        }
+    }
+    public void start(String extensionListFile) throws Exception
+    {
+        if (extensionListFile != null)
+        {
+            loadScriptExtensions(extensionListFile);
+        }
         HeartbeatThread thread = new HeartbeatThread();
         thread.start();
         LOG.info("Starting Heartbeat thread");
@@ -137,13 +177,15 @@ public class SimpleKernel
 
         try
         {
-            LOG.debug("Config file: " + args[0]);
-            FileInputStream fis = new FileInputStream(args[0]);
+            String configFile = args[0];
+            String extensionsFile = args.length == 2 ? args[1]: null;
+            LOG.debug("Config file: " + configFile);
+            FileInputStream fis = new FileInputStream(configFile);
             ObjectMapper om = new ObjectMapper();
             Config config = om.readValue(fis, Config.class);
             SimpleKernel sk = new SimpleKernel(config);
             LOG.info("Launched kernel");
-            sk.start();
+            sk.start(extensionsFile);
             LOG.info("Kernel finished");
 
         }
