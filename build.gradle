@@ -8,6 +8,9 @@ targetCompatibility = 1.8
 
 sourceSets.main.resources.srcDir 'src/main/js'
 
+ext {
+    jackson_version = '2.4.3'
+}
 repositories {
     mavenCentral()
 }
@@ -31,6 +34,12 @@ task fatJar(type: Jar) {
 }
 
 dependencies {
-    compile file(dependenciesFile).readLines()
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: jackson_version
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jackson_version
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: jackson_version
+    compile group: 'commons-io', name: 'commons-io', version: '2.4'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.2'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.0.13'
+    compile group: 'org.zeromq', name: 'jeromq', version: '0.3.5'
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }
